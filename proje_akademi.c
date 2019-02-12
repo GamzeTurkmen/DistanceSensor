@@ -1,13 +1,3 @@
-/*
- * File:   proje_akademi.c
- * Author: Fatih YILDIRIM
- *
- * Created on 25 Ocak 2018 Per?embe, 17:06
- */
-
-// PIC16F877A Configuration Bit Settings
-
-// 'C' source line config statements
 
 // CONFIG
 #pragma config FOSC = XT        // Oscillator Selection bits (XT oscillator)
@@ -27,7 +17,7 @@
 float calc_dist(void);
 
 void main() {
-    TRISB=0x00; //B portunun hepsi ็?k??
+    TRISB=0x00; //B portunun hepsi รง?k??
     PORTB=0x00; //B portu hepsi lojik-0
     TRISC1=0X00;
     unsigned char dist=0;
