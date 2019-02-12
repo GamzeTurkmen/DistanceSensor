@@ -1,0 +1,96 @@
+#define _XTAL_FREQ 10000000
+#include <xc.h>
+#include <pic16f877a.h>
+// BEGIN CONFIG
+#pragma config FOSC = HS // Oscillator Selection bits (HS oscillator)
+#pragma config WDTE = OFF // Watchdog Timer Enable bit (WDT enabled)
+#pragma config PWRTE = OFF // Power-up Timer Enable bit (PWRT disabled)
+#pragma config BOREN = ON // Brown-out Reset Enable bit (BOR enabled)
+#pragma config LVP = OFF // Low-Voltage (Single-Supply) In-Circuit Serial Programming Enable bit (RB3 is digital I/O, HV on MCLR must be used for programming)
+#pragma config CPD = OFF // Data EEPROM Memory Code Protection bit (Data EEPROM code protection off)
+#pragma config WRT = OFF // Flash Program Memory Write Enable bits (Write protection off; all program memory may be written to by EECON control)
+#pragma config CP = OFF // Flash Program Memory Code Protection bit (Code protection off)
+//END CONFIG
+int a;
+void interrupt echo()
+{
+  if(RBIF == 1)                 //Makes sure that it is PORTB On-Change Interrupt
+  {
+    RBIE = 0;                   //Disable On-Change Interrupt
+    if(RB4 == 1)                  //If ECHO is HIGH
+      TMR1ON = 1;                    //Start Timer
+    if(RB4 == 0)                  //If ECHO is LOW
+    {
+      TMR1ON = 0;                    //Stop Timer
+      a = (TMR1L | (TMR1H<<8))/58.82;  //Calculate Distance
+    }
+  }
+  RBIF = 0;                     //Clear PORTB On-Change Interrupt flag
+  RBIE = 1;                     //Enable PORTB On-Change Interrupt
+}
+
+
+void main()
+{
+  TRISB = 0b00010000;           //RB4 as Input PIN (ECHO)
+  TRISD = 0x00; // LCD Pins as Output
+  TRISA=0x00;
+  GIE = 1;                      //Global Interrupt Enable
+  RBIF = 0;                     //Clear PORTB On-Change Interrupt Flag
+  RBIE = 1;                     //Enable PORTB On-Change Interrupt
+  RD0=1;
+  RD1=1;
+  RD2=1;
+  RD3=1;
+  RD4=0;
+  __delay_ms(3000);
+
+  T1CON = 0x10;                 //Initialize Timer Module
+
+  while(1)
+  {
+    TMR1H = 0;                  //Sets the Initial Value of Timer
+    TMR1L = 0;                  //Sets the Initial Value of Timer
+
+    RB0 = 1;               //TRIGGER HIGH
+    __delay_us(10);               //10uS Delay
+    RB0 = 0;               //TRIGGER LOW
+
+    __delay_ms(100); //Waiting for ECHO
+    a = a + 1; //Error Correction Constant
+
+    if(a>=2 && a<=400)          //Check whether the result is valid or not
+    {
+      if(a<15){
+          RD0=0;
+          RD4=1;
+      }
+      else{RD0=1;}
+      if(a<30){
+          RD1=0;
+          
+      }
+      else{RD1=1;}
+      if(a<45){
+          RD2=0;
+         
+          
+      }
+      else{RD2=1;}
+      if(a<60){
+          RD3=0;     
+      }
+      
+      else{RD3=1;}
+      
+      if(a>30){
+          RD4=0;
+      }
+      
+     
+    }
+    
+    
+    __delay_ms(50);
+  }
+}
